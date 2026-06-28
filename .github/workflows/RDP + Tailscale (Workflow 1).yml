@@ -8,9 +8,12 @@ on:
       ts_authkey:         { description: "Tailscale Auth key", required: true }
       quick_test:         { description: "Run 5-minute test", type: boolean, default: false }
       runtime_minutes:    { description: "Runtime minutes", required: false, default: "355" }
-      do_purge:           { description: "Purge bullet* devices", required: false, default: "true" }
+      do_purge:           { description: "Purge pritam* devices", required: false, default: "true" }
       rdp_count:          { description: "RDP instance count (1-10)", required: false, default: "1" }
       cycles_left:        { description: "Number of full cycles remaining", required: false, default: "5" }
+      computer_name:      { description: "Computer Name", required: false, default: "PRITAM-PC" }
+      timezone:           { description: "Windows Timezone", required: false, default: "India Standard Time" }
+      wallpaper_url:      { description: "Wallpaper Image URL", required: false, default: "https://i.ibb.co/XmFJhSN/wallpaper.png" }
 
 permissions:
   contents: read
@@ -41,8 +44,8 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     timeout-minutes: 370
     env:
-      RDP_USER: Bullettemporary
-      RDP_PASS: Bullet@12345
+      RDP_USER: pritam
+      RDP_PASS: pritam@12345
 
     steps:
       - name: Decide runtime
@@ -66,6 +69,24 @@ jobs:
           $ip=& $ts ip -4 |Select-Object -First 1
           "TAILSCALE_IP=$ip"|Out-File -Append $env:GITHUB_ENV
           Write-Host "Tailscale IPv4: $ip"
+
+      - name: Set Computer Name
+        run: |
+          Rename-Computer -NewName "${{ inputs.computer_name }}" -Force
+          Write-Host "Computer Name changed"
+
+      - name: Set Timezone
+        run: |
+          tzutil /s "${{ inputs.timezone }}"
+          tzutil /g
+
+      - name: Set Wallpaper
+        run: |
+          $wall="$env:TEMP\wallpaper.png"
+          Invoke-WebRequest "${{ inputs.wallpaper_url }}" -OutFile $wall
+          Set-ItemProperty "HKCU:\Control Panel\Desktop" Wallpaper $wall
+          rundll32.exe user32.dll,UpdatePerUserSystemParameters
+          Write-Host "Wallpaper Applied"
 
       - name: Enable RDP
         run: |
@@ -111,3 +132,4 @@ jobs:
           $body=@{ref="${{ github.ref_name }}";inputs=$payload}|ConvertTo-Json -Depth 20
           Invoke-WebRequest -Method POST -Uri $url -Headers $hdr -Body $body|Out-Null
           Write-Host "➡️  Workflow 2 triggered. Cycles left: $next"
+          
