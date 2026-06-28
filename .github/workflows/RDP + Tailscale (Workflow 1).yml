@@ -66,25 +66,6 @@ jobs:
           $ip=& $ts ip -4 |Select-Object -First 1
           "TAILSCALE_IP=$ip"|Out-File -Append $env:GITHUB_ENV
           Write-Host "Tailscale IPv4: $ip"
-          
-      - name: Set Computer Name
-        run: |
-          Rename-Computer -NewName "${{ inputs.computer_name }}" -Force
-          Write-Host "Computer Name changed"
-
-      - name: Set Timezone
-        run: |
-          tzutil /s "${{ inputs.timezone }}"
-          tzutil /g
-
-      - name: Set Wallpaper
-        run: |
-          $wall="$env:TEMP\wallpaper.png"
-          Invoke-WebRequest "${{ inputs.wallpaper_url }}" -OutFile $wall
-          Set-ItemProperty "HKCU:\Control Panel\Desktop" Wallpaper $wall
-          rundll32.exe user32.dll,UpdatePerUserSystemParameters
-          Write-Host "Wallpaper Applied"
-          
 
       - name: Enable RDP
         run: |
@@ -130,4 +111,3 @@ jobs:
           $body=@{ref="${{ github.ref_name }}";inputs=$payload}|ConvertTo-Json -Depth 20
           Invoke-WebRequest -Method POST -Uri $url -Headers $hdr -Body $body|Out-Null
           Write-Host "➡️  Workflow 2 triggered. Cycles left: $next"
-          
