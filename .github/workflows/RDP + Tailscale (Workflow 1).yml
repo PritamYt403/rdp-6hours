@@ -44,8 +44,8 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     timeout-minutes: 370
     env:
-      RDP_USER: pritam
-      RDP_PASS: pritam@12345
+      RDP_USER: Pritam
+      RDP_PASS: Pritam@12345
 
     steps:
       - name: Decide runtime
